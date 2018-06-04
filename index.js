@@ -1,10 +1,6 @@
 const PCF8574 = require('pcf8574').PCF8574;
 const i2cBus = require('i2c-bus');
 
-function sleep(time) {
-  return new Promise(resolve => setTimeout(() => resolve(), time));
-}
-
 class Keypad {
 
   constructor(busNum, addr, intPin, keypadMatrix, rowPins, colPins) {
