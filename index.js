@@ -9,12 +9,7 @@ class Keypad {
 
   constructor(busNum, addr, intPin, keypadMatrix, rowPins, colPins) {
     this.pcf = new PCF8574(i2cBus.openSync(busNum), addr, true);
-
-    if (intPin !== undefined && intPin !== null) {
-      this.pcf.enableInterrupt(intPin);
-    } else {
-      setInterval(this.pcf.doPoll.bind(this.pcf), 250);
-    }
+    this.pcf.enableInterrupt(intPin);
 
     process.on('SIGINT', () => {
       this.pcf.removeAllListeners();
@@ -45,15 +40,16 @@ class Keypad {
 
     if (data.value === false) {
       this.lock = true;
-
-      const key = await this.getKey(data.pin);
-      if (key) {
-        this.handlers.forEach(h => h(key));
+      try {
+        const key = await this.getKey(data.pin);
+        if (key) {
+          this.handlers.forEach(h => h(key));
+        }
+      } catch (e) {
+        console.warn(e);
+      } finally {
+        this.lock = false;
       }
-
-      await sleep(300);
-
-      this.lock = false;
     }
   }
 
@@ -67,13 +63,14 @@ class Keypad {
     for (let i = 0; i < this.colPins.length; i++) {
       const colPin = this.colPins[i];
       await this.pcf.setPin(colPin);
-
-      await this.pcf.doPoll();
-      if (this.pcf.getPinValue(rowPin)) {
-        colIndex = i;
+      try {
+        await this.pcf.doPoll();
+        if (this.pcf.getPinValue(rowPin)) {
+          colIndex = i;
+        }
+      } finally {
+        await this.pcf.setPin(colPin);
       }
-
-      await this.pcf.setPin(colPin);
     }
     if (colIndex === -1) {
       return null;
