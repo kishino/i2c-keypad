@@ -1,6 +1,6 @@
 const Keypad = require('./index').Keypad;
 
-const keypad = new Keypad(1, 0x20, 17,
+const keypad = new Keypad(1, 0x20, 5,
   [
     ['1', '2', '3', '4'],
     ['5', '6', '7', '8'],
